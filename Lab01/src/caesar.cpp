@@ -16,122 +16,112 @@
 
 #include <iostream>
 #include <string>
-#include <cctype>
-#include <map>
-#include <algorithm>
+#include<vector>
+#include<set>
+using namespace std;
 
-// ---- Bảng tần suất chữ cái tiếng Anh chuẩn (%) — dùng để đánh giá kết quả brute-force ----
-// Nguồn: tần suất trung bình các chữ cái trong văn bản tiếng Anh
-static const double ENGLISH_FREQ[26] = {
-    8.2, 1.5, 2.8, 4.3, 12.7, 2.2, 2.0, 6.1, 7.0, 0.15, 0.77, 4.0, 2.4,
-    6.7, 7.5, 1.9, 0.095, 6.0, 6.3, 9.1, 2.8, 0.98, 2.4, 0.15, 2.0, 0.074
+//Ma hoa 1 ki tu
+char MaHoaKiTu(char char_in_P,int key){
+    if(!isalpha(char_in_P)) return char_in_P;
+    char base = isupper(char_in_P)?'A' : 'a';
+    int vi_tri = char_in_P - base;
+    int vi_tri_moi = (vi_tri + key) % 26;
+    if (vi_tri_moi < 0) vi_tri_moi += 26;
+
+    return base + vi_tri_moi;
+}
+//Ma hoa chuoi ki tu
+string MaHoaChuoi(string P,int key){
+    key = (((key%26) +26) % 26);
+
+    string ket_qua = "";
+    for(char c:P){
+        ket_qua += MaHoaKiTu(c,key);
+    }
+    return ket_qua;
+}
+//Cau 2.1.1 - Nhap vao 1 chuoi roi ma hoa chuoi do
+void NhapVaMaHoa(){
+    string p;
+    int key;
+    
+    cout << "Nhap van ban goc: ";
+    getline(cin, p);
+    
+    cout << "Nhap khoa (key): ";
+    cin >> key;
+    
+    string maHoaXong = MaHoaChuoi(p, key);
+    cout << "Van ban da ma hoa: " << maHoaXong << endl;
+}
+
+//Cau 2.1.2 - Ma hoa van ban 
+
+set<string> tuDienPhoBien = {
+    "the","be","to","of","and","a","in","that","have","i",
+    "it","for","not","on","with","he","as","you","do","at",
+    "this","but","his","by","from","they","we","say","her","she",
+    "or","an","will","my","one","all","would","there","their","what",
+    "so","up","out","if","about","who","get","which","go","me",
+    "when","make","can","like","time","no","just","him","know","take",
+    "people","into","year","your","good","some","could","them","see","other"
 };
-
-// Mã hóa/giải mã 1 ký tự với dịch chuyển shift (dùng chung cho encrypt/decrypt)
-char shiftChar(char c, int shift) {
-    if (std::isupper(static_cast<unsigned char>(c))) {
-        return static_cast<char>('A' + ((c - 'A' + shift) % 26 + 26) % 26);
-    }
-    if (std::islower(static_cast<unsigned char>(c))) {
-        return static_cast<char>('a' + ((c - 'a' + shift) % 26 + 26) % 26);
-    }
-    return c; // giữ nguyên ký tự không phải chữ cái (khoảng trắng, dấu câu...)
-}
-
-std::string caesarEncrypt(const std::string& plaintext, int key) {
-    std::string result = plaintext;
-    for (char& c : result) c = shiftChar(c, key);
-    return result;
-}
-
-std::string caesarDecrypt(const std::string& ciphertext, int key) {
-    return caesarEncrypt(ciphertext, -key); // giải mã = mã hóa với dịch chuyển ngược
-}
-
-// Chi-squared: đo độ "giống tiếng Anh" của 1 văn bản dựa trên tần suất chữ cái.
-// Điểm càng THẤP thì văn bản càng giống tiếng Anh thật (khớp phân bố chuẩn).
-double chiSquaredScore(const std::string& text) {
-    int counts[26] = {0};
-    int total = 0;
-
-    for (char c : text) {
-        if (std::isalpha(static_cast<unsigned char>(c))) {
-            counts[std::tolower(static_cast<unsigned char>(c)) - 'a']++;
-            total++;
+// Tách chuỗi thành các từ (bỏ dấu câu), chuyển về chữ thường
+vector<string> tachTu(string s) {
+    vector<string> tuVung;
+    string tuHienTai = "";
+    for (char c : s) {
+        if (isalpha(c)) {
+            tuHienTai += tolower(c);
+        } else {
+            if (!tuHienTai.empty()) {
+                tuVung.push_back(tuHienTai);
+                tuHienTai = "";
+            }
         }
     }
-    if (total == 0) return 1e9;
-
-    double chiSquared = 0.0;
-    for (int i = 0; i < 26; i++) {
-        double observed = counts[i];
-        double expected = ENGLISH_FREQ[i] / 100.0 * total;
-        if (expected > 0) {
-            chiSquared += (observed - expected) * (observed - expected) / expected;
-        }
-    }
-    return chiSquared;
+    if (!tuHienTai.empty()) tuVung.push_back(tuHienTai);
+    return tuVung;
 }
 
-// Brute-force: thử toàn bộ 26 khóa, chọn khóa cho ra văn bản "giống tiếng Anh nhất"
-void bruteForce(const std::string& ciphertext) {
-    double bestScore = 1e18;
-    int bestKey = 0;
-    std::string bestPlain;
+// Chấm điểm: đếm số từ hợp lệ trong bản giải mã
+int chamDiem(string s) {
+    vector<string> tuVung = tachTu(s);
+    int diem = 0;
+    for (string tu : tuVung) {
+        if (tuDienPhoBien.count(tu)) diem++;
+    }
+    return diem;
+}
 
-    std::cout << "=== Ket qua thu tung khoa (Chi-squared score - cang thap cang giong tieng Anh) ===\n";
+void GiaiMaVanBan(){
+    string ciphertext;
+    cout << "Nhap van ban ma hoa: ";
+    cin.ignore();
+    getline(cin, ciphertext);
+    
+
+    int diemCaoNhat = -1;
+    int keyDung = -1;
+    string ketQuaDung = "";
+
     for (int key = 0; key < 26; key++) {
-        std::string candidate = caesarDecrypt(ciphertext, key);
-        double score = chiSquaredScore(candidate);
+        string thuGiaiMa = MaHoaChuoi(ciphertext, -key); // giải mã = mã hóa với -key
+        int diem = chamDiem(thuGiaiMa);
 
-        std::cout << "Key=" << key << "\tScore=" << score;
-        if (score < bestScore) {
-            bestScore = score;
-            bestKey = key;
-            bestPlain = candidate;
-            std::cout << "  <-- tot nhat hien tai";
+        if (diem > diemCaoNhat) {
+            diemCaoNhat = diem;
+            keyDung = key;
+            ketQuaDung = thuGiaiMa;
         }
-        std::cout << "\n";
     }
 
-    std::cout << "\n=== KET QUA DUY NHAT (khoa dung nhat) ===\n";
-    std::cout << "Khoa: " << bestKey << "\n";
-    std::cout << "Ban ro: " << bestPlain << "\n";
+    cout << "\nKhoa tim duoc: " << keyDung << endl;
+    cout << "Ban ro: " << ketQuaDung << endl;
 }
 
-void printUsage() {
-    std::cout << "Su dung:\n"
-              << "  caesar encrypt <key> <plaintext>\n"
-              << "  caesar decrypt <key> <ciphertext>\n"
-              << "  caesar bruteforce <ciphertext>\n";
-}
-
-int main(int argc, char* argv[]) {
-    if (argc < 3) {
-        printUsage();
-        return 1;
-    }
-
-    std::string mode = argv[1];
-
-    if (mode == "encrypt" && argc >= 4) {
-        int key = std::stoi(argv[2]);
-        std::string plaintext = argv[3];
-        std::cout << "Ciphertext: " << caesarEncrypt(plaintext, key) << "\n";
-    }
-    else if (mode == "decrypt" && argc >= 4) {
-        int key = std::stoi(argv[2]);
-        std::string ciphertext = argv[3];
-        std::cout << "Plaintext: " << caesarDecrypt(ciphertext, key) << "\n";
-    }
-    else if (mode == "bruteforce" && argc >= 3) {
-        std::string ciphertext = argv[2];
-        bruteForce(ciphertext);
-    }
-    else {
-        printUsage();
-        return 1;
-    }
-
+int main(){
+    //NhapVaMaHoa();
+    GiaiMaVanBan();
     return 0;
-}
+} 
