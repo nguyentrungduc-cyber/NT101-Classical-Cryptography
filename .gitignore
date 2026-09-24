@@ -1,0 +1,21 @@
+# Build artifacts
+*.o
+*.obj
+*.exe
+*.out
+
+# Binary thực thi (build từ Makefile, không commit lên git)
+Lab01/caesar
+Lab01/substitution
+Lab01/playfair
+Lab01/vigenere
+Lab01/railfence
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
