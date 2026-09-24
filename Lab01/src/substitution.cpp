@@ -129,9 +129,29 @@ double bigramScore(const std::string& text, const std::array<std::array<double, 
 }
 
 // Giải mã text với 1 khóa thay thế (key[i] = chữ cái thay cho 'A'+i trong ciphertext)
+// Dùng cho việc TÍNH ĐIỂM — chỉ nhận input đã normalize (toàn chữ hoa, không dấu câu)
 std::string applyKey(const std::string& ciphertext, const std::array<char, 26>& key) {
     std::string result;
     for (char c : ciphertext) result += key[c - 'A'];
+    return result;
+}
+
+// Giải mã nhưng GIỮ NGUYÊN định dạng gốc: khoảng trắng, dấu câu, xuống dòng,
+// và phân biệt hoa/thường của ký tự gốc — chỉ áp khóa lên riêng các chữ cái.
+// Dùng để IN KẾT QUẢ CUỐI CÙNG cho người đọc, giống cách CrypTool hiển thị.
+std::string applyKeyPreserveFormat(const std::string& raw, const std::array<char, 26>& key) {
+    std::string result;
+    for (char c : raw) {
+        if (std::isupper(static_cast<unsigned char>(c))) {
+            result += key[c - 'A'];
+        } else if (std::islower(static_cast<unsigned char>(c))) {
+            // Giữ chữ thường: áp khóa trên bản hoa rồi hạ xuống thường lại
+            char upper = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+            result += static_cast<char>(std::tolower(static_cast<unsigned char>(key[upper - 'A'])));
+        } else {
+            result += c; // giữ nguyên khoảng trắng, dấu câu, số, xuống dòng...
+        }
+    }
     return result;
 }
 
@@ -234,7 +254,10 @@ void autoCrack(const std::string& raw) {
     }
 
     std::cout << "\nBan ro (uoc luong tot nhat):\n";
-    std::cout << applyKey(ciphertext, bestOverallKey) << "\n";
+    // Dùng applyKeyPreserveFormat(raw, ...) thay vì applyKey(ciphertext, ...)
+    // để GIỮ NGUYÊN khoảng trắng/dấu câu của input gốc — giống cách CrypTool
+    // hiển thị kết quả, thay vì dính liền thành 1 khối không dấu như trước.
+    std::cout << applyKeyPreserveFormat(raw, bestOverallKey) << "\n";
 
     std::cout << "\nLuu y: ket qua nay la uoc luong tu dong dua tren thong ke bigram.\n"
               << "Voi van ban ngan hoac cau truc dac biet, ket qua co the chua hoan hao\n"
