@@ -22,15 +22,37 @@ tín hiệu thống kê để tối ưu đúng hướng.
 bằng khóa **hoán vị hoàn toàn ngẫu nhiên** (không phải Caesar) — đúng
 bản chất mono-alphabetic substitution cipher tổng quát.
 
-**Kết quả:** ✅ Đọc hiểu gần như hoàn hảo. Bản rõ khôi phục được:
+**Kết quả (đo bằng `verify_accuracy.py`, đối chiếu ký tự-với-ký tự với
+plaintext gốc `task2.3_testcase2_plaintext_ground_truth.txt`):**
 
-> THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG THIS SENTENCE CONTAINS
-> EVERY LETTER OF THE ALPHABET AND IS COMMONLY USED FOR TESTING
-> TYPEWRITERS AND FONTS CRYPTOGRAPHY IS THE PRACTICE OF SECURE
-> COMMUNICATION IN THE PRESENCE OF THIRD PARTIES...
+Chạy 5 lần liên tiếp (chương trình dùng `std::random_device`, không seed
+cố định, nên mỗi lần chạy kết quả có thể khác nhau):
 
-Chỉ còn nhầm lẫn nhẹ giữa 3 cặp chữ hiếm gặp: **M↔B**, **W↔W** (giữ
-nguyên đúng), **Y↔M** — không ảnh hưởng đến khả năng đọc hiểu tổng thể.
+| Lần chạy | Độ chính xác |
+|---|---|
+| 1 | 93.8% |
+| 2 | 93.8% |
+| 3 | 93.6% |
+| 4 | 91.9% |
+| 5 | 91.6% |
+
+**Dao động trung bình: 91.6% – 93.8%** (dùng số liệu này, không dùng
+đánh giá chủ quan "đọc hiểu được bằng mắt" — vì đọc bằng mắt dễ đánh giá
+cao hơn thực tế do não người tự "sửa" các lỗi nhỏ khi đọc).
+
+Ví dụ 1 lần chạy cho bản rõ:
+> THE QUICK WROJN FOZYULPS OVER THE MABXDOG THIS SENTENCE CONTAINS
+> EVERX METTER OF THE AMPHAWET AND IS COLLONMX USED FOR TESTING...
+
+Các lỗi lặp lại nhiều nhất là hoán đổi nhầm giữa **B↔V/W**, **L↔R**,
+**X↔Y**, **M↔Z** — đều là các chữ cái có tần suất tiếng Anh thấp
+(dưới 2%), khiến bảng bigram không đủ tín hiệu thống kê để phân biệt.
+
+**Cách tái tạo kết quả này:**
+```bash
+./substitution < data/task2.3_testcase2_long_random_key.txt > /tmp/result.txt
+python3 data/verify_accuracy.py data/task2.3_testcase2_plaintext_ground_truth.txt /tmp/result.txt
+```
 
 ---
 
@@ -48,11 +70,11 @@ thống kê có ý nghĩa. Đây là giới hạn dưới rõ ràng của phươ
 
 ## Bảng tổng hợp
 
-| Testcase | Độ dài (ký tự chữ) | Loại khóa | Kết quả |
+| Testcase | Độ dài (ký tự chữ) | Loại khóa | Độ chính xác |
 |---|---|---|---|
-| 1 | ~180 | Caesar (dịch đều) | ❌ Sai gần hết |
-| 2 | ~420 | Hoán vị ngẫu nhiên | ✅ Gần hoàn hảo |
-| 3 | 15 | Hoán vị ngẫu nhiên | ❌ Sai hoàn toàn |
+| 1 | ~180 | Caesar (dịch đều) | Không đo được bằng % (không có ground truth từng ký tự sẵn), quan sát bằng mắt: đọc hiểu kém |
+| 2 | ~420 | Hoán vị ngẫu nhiên | **91.6% – 93.8%** (đo qua 5 lần chạy, xem chi tiết ở trên) |
+| 3 | 15 | Hoán vị ngẫu nhiên | Sai hoàn toàn, không đọc hiểu được |
 
 ## Nhận xét về hiệu quả phương pháp
 
@@ -62,9 +84,26 @@ hay hoán vị ngẫu nhiên đều dùng chung 1 cơ chế giải mã bên dư�
 Caesar chỉ là trường hợp đặc biệt của substitution cipher tổng quát).
 
 - Dưới ~50 ký tự: không đủ dữ liệu thống kê, kết quả gần như ngẫu nhiên
-- Trên ~400 ký tự: khôi phục đúng phần lớn nội dung, chỉ còn sai lệch
-  ở các chữ cái xuất hiện tần suất thấp (J, K, Q, V, W, X, Z) — do các
-  chữ này không đủ số lần xuất hiện để bảng bigram phân biệt chính xác
+- Trên ~400 ký tự: khôi phục được **91.6% – 93.8%** ký tự đúng (đo định
+  lượng, không phải ước lượng bằng mắt), đủ để đọc hiểu nội dung tổng
+  thể, nhưng KHÔNG đạt 100%
+- Sai lệch tập trung ở các chữ cái tần suất tiếng Anh thấp (dưới 2%):
+  B, V, W, L, R, X, Y, M, Z — do các chữ này không đủ số lần xuất hiện
+  để bảng bigram phân biệt chính xác
+
+**Về tính ngẫu nhiên:** vì chương trình dùng `std::random_device` để
+xáo trộn khóa ban đầu cho random restart (không seed cố định), **mỗi
+lần chạy cho kết quả hơi khác nhau** — dao động 91.6% đến 93.8% qua
+5 lần thử với cùng 1 ciphertext. Đây là đặc tính vốn có của thuật toán
+ngẫu nhiên (metaheuristic), không phải lỗi hay sự không nhất quán của
+chương trình.
+
+**Phương pháp đo:** dùng script `verify_accuracy.py` so sánh ký tự-với-
+ký tự với ground truth đã biết trước, thay vì chỉ đọc bằng mắt — đọc
+bằng mắt có xu hướng đánh giá cao hơn thực tế vì não người tự động "sửa"
+các lỗi chính tả nhỏ khi đọc câu có ngữ cảnh, dẫn đến nhận định sai lệch
+như "gần hoàn hảo" trong khi số liệu thực tế cho thấy vẫn còn ~6-8% ký
+tự sai.
 
 Đây là hạn chế đã được biết đến của phương pháp thống kê n-gram khi áp
 dụng cho corpus (kích thước mẫu) nhỏ — không phải lỗi cài đặt thuật

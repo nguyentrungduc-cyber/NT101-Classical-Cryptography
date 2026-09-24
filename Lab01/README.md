@@ -114,6 +114,15 @@ vài ký tự hiếm gặp (J, K, Q, X, Z) cần điều chỉnh thủ công d�
 Xem [`data/task2.3_results_summary.md`](./data/task2.3_results_summary.md) để biết
 kết quả chi tiết và nhận xét đầy đủ về hiệu quả phương pháp (dùng cho báo cáo).
 
+**Đo độ chính xác khách quan** (khuyên dùng thay vì chỉ đọc bằng mắt — đọc bằng
+mắt dễ đánh giá cao hơn thực tế):
+```bash
+./substitution < data/task2.3_testcase2_long_random_key.txt > /tmp/result.txt
+python3 data/verify_accuracy.py data/task2.3_testcase2_plaintext_ground_truth.txt /tmp/result.txt
+```
+Script so sánh ký tự-với-ký tự với plaintext gốc đã biết trước, in ra % chính xác
+và liệt kê các vị trí sai đầu tiên.
+
 ---
 
 ## Task 2.4 — Playfair Cipher
