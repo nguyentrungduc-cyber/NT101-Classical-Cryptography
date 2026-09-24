@@ -244,13 +244,15 @@ void autoCrack(const std::string& raw) {
 
 void printUsage() {
     std::cout << "Su dung:\n"
-              << "  substitution freq   < ciphertext.txt\n"
-              << "  substitution crack  < ciphertext.txt\n"
-              << "  echo \"ciphertext\" | substitution crack\n";
+              << "  substitution         < ciphertext.txt   (mac dinh: crack)\n"
+              << "  substitution freq    < ciphertext.txt\n"
+              << "  substitution crack   < ciphertext.txt\n"
+              << "  echo \"ciphertext\" | substitution\n";
 }
 
 // Đọc toàn bộ stdin cho đến EOF — tương thích với CPH (Competitive Programming
-// Helper) và các judge tự động, vốn luôn đưa input qua stdin thay vì argv.
+// Helper) và các judge tự động, vốn luôn đưa input qua stdin, KHÔNG truyền
+// bất kỳ argument dòng lệnh nào.
 std::string readStdin() {
     std::stringstream ss;
     ss << std::cin.rdbuf();
@@ -258,12 +260,10 @@ std::string readStdin() {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        printUsage();
-        return 1;
-    }
-
-    std::string mode = argv[1];
+    // Không bắt buộc argument nữa: nếu chạy tay muốn xem freq analysis (Task 2.2)
+    // thì truyền "freq"; còn lại (kể cả không truyền gì — trường hợp CPH) sẽ
+    // mặc định chạy "crack" (Task 2.3), vì đây là chức năng chính của file này.
+    std::string mode = (argc >= 2) ? argv[1] : "crack";
     std::string input = readStdin();
 
     if (mode == "freq") {
