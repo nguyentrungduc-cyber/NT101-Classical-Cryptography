@@ -31,17 +31,6 @@ static const double ENGLISH_FREQ[26] = {
     6.7, 7.5, 1.9, 0.095, 6.0, 6.3, 9.1, 2.8, 0.98, 2.4, 0.15, 2.0, 0.074
 };
 
-// ---- Đọc input: nếu là đường dẫn file tồn tại thì đọc file, không thì coi là chuỗi trực tiếp ----
-std::string readInput(const std::string& arg) {
-    std::ifstream file(arg);
-    if (file.good()) {
-        std::stringstream ss;
-        ss << file.rdbuf();
-        return ss.str();
-    }
-    return arg;
-}
-
 // ---- Chuẩn hóa: chỉ giữ chữ cái, chuyển hết thành in hoa ----
 std::string normalize(const std::string& text) {
     std::string result;
@@ -255,18 +244,27 @@ void autoCrack(const std::string& raw) {
 
 void printUsage() {
     std::cout << "Su dung:\n"
-              << "  substitution freq <ciphertext_hoac_duong_dan_file>\n"
-              << "  substitution crack <ciphertext_hoac_duong_dan_file>\n";
+              << "  substitution freq   < ciphertext.txt\n"
+              << "  substitution crack  < ciphertext.txt\n"
+              << "  echo \"ciphertext\" | substitution crack\n";
+}
+
+// Đọc toàn bộ stdin cho đến EOF — tương thích với CPH (Competitive Programming
+// Helper) và các judge tự động, vốn luôn đưa input qua stdin thay vì argv.
+std::string readStdin() {
+    std::stringstream ss;
+    ss << std::cin.rdbuf();
+    return ss.str();
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 3) {
+    if (argc < 2) {
         printUsage();
         return 1;
     }
 
     std::string mode = argv[1];
-    std::string input = readInput(argv[2]);
+    std::string input = readStdin();
 
     if (mode == "freq") {
         frequencyAnalysis(input);

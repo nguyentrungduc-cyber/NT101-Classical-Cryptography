@@ -83,8 +83,8 @@ dùng tự nhìn bằng mắt.
 ## Task 2.2 / 2.3 — Mono-alphabetic Substitution & Frequency Analysis
 
 ```bash
-./substitution freq <ciphertext_hoặc_đường_dẫn_file>       # Task 2.2
-./substitution crack <ciphertext_hoặc_đường_dẫn_file>       # Task 2.3
+./substitution freq   < ciphertext.txt       # Task 2.2 — đọc ciphertext từ stdin
+./substitution crack  < ciphertext.txt       # Task 2.3 — đọc ciphertext từ stdin
 ```
 
 **Task 2.2** in ra bảng tần suất chữ cái của ciphertext (sắp xếp giảm dần),
