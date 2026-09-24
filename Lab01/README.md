@@ -105,6 +105,15 @@ trong đề bài), thuật toán cho kết quả gần đúng hoàn toàn, có t
 vài ký tự hiếm gặp (J, K, Q, X, Z) cần điều chỉnh thủ công dựa trên ngữ cảnh —
 đây là đặc điểm chung của phương pháp hill-climbing, không phải lỗi cài đặt.
 
+**3 testcase kiểm thử độ dài văn bản khác nhau:**
+```bash
+./substitution < data/task2.3_testcase1_short.txt              # ngắn (~180 ký tự) — kém
+./substitution < data/task2.3_testcase2_long_random_key.txt    # dài (~420 ký tự) — gần hoàn hảo
+./substitution < data/task2.3_testcase3_too_short.txt           # rất ngắn (15 ký tự) — sai hoàn toàn
+```
+Xem [`data/task2.3_results_summary.md`](./data/task2.3_results_summary.md) để biết
+kết quả chi tiết và nhận xét đầy đủ về hiệu quả phương pháp (dùng cho báo cáo).
+
 ---
 
 ## Task 2.4 — Playfair Cipher
