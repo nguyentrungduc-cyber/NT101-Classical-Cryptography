@@ -31,17 +31,6 @@ static const double ENGLISH_FREQ[26] = {
     6.7, 7.5, 1.9, 0.095, 6.0, 6.3, 9.1, 2.8, 0.98, 2.4, 0.15, 2.0, 0.074
 };
 
-// ---- Đọc input: nếu là đường dẫn file tồn tại thì đọc file, không thì coi là chuỗi trực tiếp ----
-std::string readInput(const std::string& arg) {
-    std::ifstream file(arg);
-    if (file.good()) {
-        std::stringstream ss;
-        ss << file.rdbuf();
-        return ss.str();
-    }
-    return arg;
-}
-
 // ---- Chuẩn hóa: chỉ giữ chữ cái, chuyển hết thành in hoa ----
 std::string normalize(const std::string& text) {
     std::string result;
@@ -140,9 +129,29 @@ double bigramScore(const std::string& text, const std::array<std::array<double, 
 }
 
 // Giải mã text với 1 khóa thay thế (key[i] = chữ cái thay cho 'A'+i trong ciphertext)
+// Dùng cho việc TÍNH ĐIỂM — chỉ nhận input đã normalize (toàn chữ hoa, không dấu câu)
 std::string applyKey(const std::string& ciphertext, const std::array<char, 26>& key) {
     std::string result;
     for (char c : ciphertext) result += key[c - 'A'];
+    return result;
+}
+
+// Giải mã nhưng GIỮ NGUYÊN định dạng gốc: khoảng trắng, dấu câu, xuống dòng,
+// và phân biệt hoa/thường của ký tự gốc — chỉ áp khóa lên riêng các chữ cái.
+// Dùng để IN KẾT QUẢ CUỐI CÙNG cho người đọc, giống cách CrypTool hiển thị.
+std::string applyKeyPreserveFormat(const std::string& raw, const std::array<char, 26>& key) {
+    std::string result;
+    for (char c : raw) {
+        if (std::isupper(static_cast<unsigned char>(c))) {
+            result += key[c - 'A'];
+        } else if (std::islower(static_cast<unsigned char>(c))) {
+            // Giữ chữ thường: áp khóa trên bản hoa rồi hạ xuống thường lại
+            char upper = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+            result += static_cast<char>(std::tolower(static_cast<unsigned char>(key[upper - 'A'])));
+        } else {
+            result += c; // giữ nguyên khoảng trắng, dấu câu, số, xuống dòng...
+        }
+    }
     return result;
 }
 
@@ -245,7 +254,10 @@ void autoCrack(const std::string& raw) {
     }
 
     std::cout << "\nBan ro (uoc luong tot nhat):\n";
-    std::cout << applyKey(ciphertext, bestOverallKey) << "\n";
+    // Dùng applyKeyPreserveFormat(raw, ...) thay vì applyKey(ciphertext, ...)
+    // để GIỮ NGUYÊN khoảng trắng/dấu câu của input gốc — giống cách CrypTool
+    // hiển thị kết quả, thay vì dính liền thành 1 khối không dấu như trước.
+    std::cout << applyKeyPreserveFormat(raw, bestOverallKey) << "\n";
 
     std::cout << "\nLuu y: ket qua nay la uoc luong tu dong dua tren thong ke bigram.\n"
               << "Voi van ban ngan hoac cau truc dac biet, ket qua co the chua hoan hao\n"
@@ -255,18 +267,27 @@ void autoCrack(const std::string& raw) {
 
 void printUsage() {
     std::cout << "Su dung:\n"
-              << "  substitution freq <ciphertext_hoac_duong_dan_file>\n"
-              << "  substitution crack <ciphertext_hoac_duong_dan_file>\n";
+              << "  substitution         < ciphertext.txt   (mac dinh: crack)\n"
+              << "  substitution freq    < ciphertext.txt\n"
+              << "  substitution crack   < ciphertext.txt\n"
+              << "  echo \"ciphertext\" | substitution\n";
+}
+
+// Đọc toàn bộ stdin cho đến EOF — tương thích với CPH (Competitive Programming
+// Helper) và các judge tự động, vốn luôn đưa input qua stdin, KHÔNG truyền
+// bất kỳ argument dòng lệnh nào.
+std::string readStdin() {
+    std::stringstream ss;
+    ss << std::cin.rdbuf();
+    return ss.str();
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 3) {
-        printUsage();
-        return 1;
-    }
-
-    std::string mode = argv[1];
-    std::string input = readInput(argv[2]);
+    // Không bắt buộc argument nữa: nếu chạy tay muốn xem freq analysis (Task 2.2)
+    // thì truyền "freq"; còn lại (kể cả không truyền gì — trường hợp CPH) sẽ
+    // mặc định chạy "crack" (Task 2.3), vì đây là chức năng chính của file này.
+    std::string mode = (argc >= 2) ? argv[1] : "crack";
+    std::string input = readStdin();
 
     if (mode == "freq") {
         frequencyAnalysis(input);

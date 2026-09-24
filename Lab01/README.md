@@ -83,8 +83,9 @@ dùng tự nhìn bằng mắt.
 ## Task 2.2 / 2.3 — Mono-alphabetic Substitution & Frequency Analysis
 
 ```bash
-./substitution freq <ciphertext_hoặc_đường_dẫn_file>       # Task 2.2
-./substitution crack <ciphertext_hoặc_đường_dẫn_file>       # Task 2.3
+./substitution               < ciphertext.txt       # mặc định = crack, dùng được ngay với CPH
+./substitution freq          < ciphertext.txt       # Task 2.2
+./substitution crack         < ciphertext.txt       # Task 2.3 (tường minh)
 ```
 
 **Task 2.2** in ra bảng tần suất chữ cái của ciphertext (sắp xếp giảm dần),
@@ -103,6 +104,24 @@ dùng tự nhìn bằng mắt.
 trong đề bài), thuật toán cho kết quả gần đúng hoàn toàn, có thể còn nhầm lẫn
 vài ký tự hiếm gặp (J, K, Q, X, Z) cần điều chỉnh thủ công dựa trên ngữ cảnh —
 đây là đặc điểm chung của phương pháp hill-climbing, không phải lỗi cài đặt.
+
+**3 testcase kiểm thử độ dài văn bản khác nhau:**
+```bash
+./substitution < data/task2.3_testcase1_short.txt              # ngắn (~180 ký tự) — kém
+./substitution < data/task2.3_testcase2_long_random_key.txt    # dài (~420 ký tự) — gần hoàn hảo
+./substitution < data/task2.3_testcase3_too_short.txt           # rất ngắn (15 ký tự) — sai hoàn toàn
+```
+Xem [`data/task2.3_results_summary.md`](./data/task2.3_results_summary.md) để biết
+kết quả chi tiết và nhận xét đầy đủ về hiệu quả phương pháp (dùng cho báo cáo).
+
+**Đo độ chính xác khách quan** (khuyên dùng thay vì chỉ đọc bằng mắt — đọc bằng
+mắt dễ đánh giá cao hơn thực tế):
+```bash
+./substitution < data/task2.3_testcase2_long_random_key.txt > /tmp/result.txt
+python3 data/verify_accuracy.py data/task2.3_testcase2_plaintext_ground_truth.txt /tmp/result.txt
+```
+Script so sánh ký tự-với-ký tự với plaintext gốc đã biết trước, in ra % chính xác
+và liệt kê các vị trí sai đầu tiên.
 
 ---
 
