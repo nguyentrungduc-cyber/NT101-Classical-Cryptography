@@ -4,12 +4,22 @@
 *.exe
 *.out
 
-# Binary thực thi (build từ Makefile, không commit lên git)
+# Binary thực thi (build từ Makefile, không commit lên git) — chặn ở MỌI cấp thư mục
 Lab01/caesar
 Lab01/substitution
 Lab01/playfair
 Lab01/vigenere
 Lab01/railfence
+**/caesar.exe
+**/substitution.exe
+**/playfair.exe
+**/vigenere.exe
+**/railfence.exe
+
+# CPH (Competitive Programming Helper extension) — file test case tự sinh,
+# chỉ phục vụ cá nhân, không cần thiết cho người khác build/chạy lại
+**/.cph/
+**/*.prob
 
 # Editor / IDE
 .vscode/
