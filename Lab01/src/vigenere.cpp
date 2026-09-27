@@ -16,14 +16,16 @@ using namespace std;
 // bang tan suat chu cai tieng Anh (%), lay tu slide mon hoc
 double englishFreq[26] = {
     8.2, 1.5, 2.8, 4.3, 12.7, 2.2, 2.0, 6.1, 7.0, 0.15, 0.77, 4.0, 2.4,
-    6.7, 7.5, 1.9, 0.095, 6.0, 6.3, 9.1, 2.8, 0.98, 2.4, 0.15, 2.0, 0.074
-};
+    6.7, 7.5, 1.9, 0.095, 6.0, 6.3, 9.1, 2.8, 0.98, 2.4, 0.15, 2.0, 0.074};
 
 // chi lay chu cai, doi het thanh in hoa, may cai khac (dau cau, so...) bo qua
-string cleanText(string s) {
+string cleanText(string s)
+{
     string out = "";
-    for (int i = 0; i < (int)s.size(); i++) {
-        if (isalpha(s[i])) {
+    for (int i = 0; i < (int)s.size(); i++)
+    {
+        if (isalpha(s[i]))
+        {
             out += toupper(s[i]);
         }
     }
@@ -31,44 +33,58 @@ string cleanText(string s) {
 }
 
 // ma hoa Vigenere - giu nguyen dau cau khoang trang cho de doc
-string encrypt(string plain, string key) {
+string encrypt(string plain, string key)
+{
     string k = cleanText(key);
     string result = "";
     int j = 0; // dem vi tri trong khoa, chi tang khi gap chu cai
 
-    for (int i = 0; i < (int)plain.size(); i++) {
+    for (int i = 0; i < (int)plain.size(); i++)
+    {
         char c = plain[i];
-        if (isupper(c)) {
+        if (isupper(c))
+        {
             int shift = k[j % k.size()] - 'A';
             result += (char)('A' + (c - 'A' + shift) % 26);
             j++;
-        } else if (islower(c)) {
+        }
+        else if (islower(c))
+        {
             int shift = k[j % k.size()] - 'A';
             result += (char)('a' + (c - 'a' + shift) % 26);
             j++;
-        } else {
+        }
+        else
+        {
             result += c; // dau cau, khoang trang thi giu nguyen
         }
     }
     return result;
 }
 
-string decrypt(string cipher, string key) {
+string decrypt(string cipher, string key)
+{
     string k = cleanText(key);
     string result = "";
     int j = 0;
 
-    for (int i = 0; i < (int)cipher.size(); i++) {
+    for (int i = 0; i < (int)cipher.size(); i++)
+    {
         char c = cipher[i];
-        if (isupper(c)) {
+        if (isupper(c))
+        {
             int shift = k[j % k.size()] - 'A';
             result += (char)('A' + ((c - 'A' - shift) % 26 + 26) % 26);
             j++;
-        } else if (islower(c)) {
+        }
+        else if (islower(c))
+        {
             int shift = k[j % k.size()] - 'A';
             result += (char)('a' + ((c - 'a' - shift) % 26 + 26) % 26);
             j++;
-        } else {
+        }
+        else
+        {
             result += c;
         }
     }
@@ -79,15 +95,19 @@ string decrypt(string cipher, string key) {
 
 // Index of Coincidence - do xac suat 2 chu cai random trong text giong nhau
 // Tieng Anh that thi IC ~ 0.067, con random thi thap hon nhieu ~0.038
-double tinhIC(string text) {
+double tinhIC(string text)
+{
     int dem[26] = {0};
-    for (int i = 0; i < (int)text.size(); i++) dem[text[i] - 'A']++;
+    for (int i = 0; i < (int)text.size(); i++)
+        dem[text[i] - 'A']++;
 
     int n = text.size();
-    if (n <= 1) return 0;
+    if (n <= 1)
+        return 0;
 
     double tong = 0;
-    for (int i = 0; i < 26; i++) {
+    for (int i = 0; i < 26; i++)
+    {
         tong += dem[i] * (dem[i] - 1);
     }
     return tong / (n * (n - 1));
@@ -95,18 +115,23 @@ double tinhIC(string text) {
 
 // Kasiski: tim cac cum 3 ky tu bi lap lai, ghi lai khoang cach giua cac lan xuat hien
 // -> do dai khoa thuong la uoc chung cua may cai khoang cach nay
-vector<int> timKhoangCachLapLai(string text) {
+vector<int> timKhoangCachLapLai(string text)
+{
     map<string, vector<int>> viTri;
-    for (int i = 0; i + 3 <= (int)text.size(); i++) {
+    for (int i = 0; i + 3 <= (int)text.size(); i++)
+    {
         string cum = text.substr(i, 3);
         viTri[cum].push_back(i);
     }
 
     vector<int> khoangCach;
-    for (auto &p : viTri) {
+    for (auto &p : viTri)
+    {
         vector<int> &vt = p.second;
-        if (vt.size() < 2) continue;
-        for (int i = 1; i < (int)vt.size(); i++) {
+        if (vt.size() < 2)
+            continue;
+        for (int i = 1; i < (int)vt.size(); i++)
+        {
             khoangCach.push_back(vt[i] - vt[0]);
         }
     }
@@ -114,25 +139,29 @@ vector<int> timKhoangCachLapLai(string text) {
 }
 
 // thu doan do dai khoa tu 2 den 20, xem cai nao co phieu bau (Kasiski) va IC hop ly nhat
-int doanDoDaiKhoa(string text) {
+int doanDoDaiKhoa(string text)
+{
     vector<int> khoangCach = timKhoangCachLapLai(text);
 
     // dem xem moi so tu 2->20 la uoc so cua bao nhieu khoang cach
     map<int, int> phieuBau;
-    for (int d : khoangCach) {
-        for (int f = 2; f <= 20; f++) {
-            if (d % f == 0) phieuBau[f]++;
+    for (int d : khoangCach)
+    {
+        for (int f = 2; f <= 20; f++)
+        {
+            if (d % f == 0)
+                phieuBau[f]++;
         }
     }
 
     cout << "Ket qua Kasiski (top 5 do dai duoc bau nhieu nhat):\n";
-    vector<pair<int,int>> ds(phieuBau.begin(), phieuBau.end());
-    sort(ds.begin(), ds.end(), [](pair<int,int> a, pair<int,int> b){
-        return a.second > b.second;
-    });
+    vector<pair<int, int>> ds(phieuBau.begin(), phieuBau.end());
+    sort(ds.begin(), ds.end(), [](pair<int, int> a, pair<int, int> b)
+         { return a.second > b.second; });
 
     int soLuongXet = min((int)ds.size(), 5);
-    for (int i = 0; i < soLuongXet; i++) {
+    for (int i = 0; i < soLuongXet; i++)
+    {
         cout << "  Do dai " << ds[i].first << " -> " << ds[i].second << " phieu\n";
     }
 
@@ -141,19 +170,23 @@ int doanDoDaiKhoa(string text) {
     int doDaiTot = 1;
     double lechNhoNhat = 999;
 
-    for (int i = 0; i < soLuongXet; i++) {
+    for (int i = 0; i < soLuongXet; i++)
+    {
         int len = ds[i].first;
         double tongIC = 0;
-        for (int off = 0; off < len; off++) {
+        for (int off = 0; off < len; off++)
+        {
             string nhom = "";
-            for (int j = off; j < (int)text.size(); j += len) nhom += text[j];
+            for (int j = off; j < (int)text.size(); j += len)
+                nhom += text[j];
             tongIC += tinhIC(nhom);
         }
         double icTB = tongIC / len;
         cout << "  Do dai " << len << " -> IC trung binh = " << icTB << "\n";
 
         double lech = abs(icTB - 0.067);
-        if (lech < lechNhoNhat) {
+        if (lech < lechNhoNhat)
+        {
             lechNhoNhat = lech;
             doDaiTot = len;
         }
@@ -164,20 +197,25 @@ int doanDoDaiKhoa(string text) {
 
 // voi 1 nhom ky tu (da biet cung 1 vi tri khoa) va shift dang thu, tinh chi-squared
 // giong het bai Caesar, cang thap thi cang giong tieng Anh
-double tinhChiSquare(string nhom, int shift) {
+double tinhChiSquare(string nhom, int shift)
+{
     int dem[26] = {0};
-    for (char c : nhom) {
+    for (char c : nhom)
+    {
         int idx = ((c - 'A') - shift + 26) % 26;
         dem[idx]++;
     }
 
     int n = nhom.size();
-    if (n == 0) return 999999;
+    if (n == 0)
+        return 999999;
 
     double chiSq = 0;
-    for (int i = 0; i < 26; i++) {
+    for (int i = 0; i < 26; i++)
+    {
         double expect = englishFreq[i] / 100.0 * n;
-        if (expect > 0) {
+        if (expect > 0)
+        {
             chiSq += (dem[i] - expect) * (dem[i] - expect) / expect;
         }
     }
@@ -185,17 +223,22 @@ double tinhChiSquare(string nhom, int shift) {
 }
 
 // voi do dai khoa da biet, tach text thanh tung nhom theo vi tri, roi doan tung ky tu khoa
-string doanKhoa(string text, int doDaiKhoa) {
+string doanKhoa(string text, int doDaiKhoa)
+{
     string khoa = "";
-    for (int off = 0; off < doDaiKhoa; off++) {
+    for (int off = 0; off < doDaiKhoa; off++)
+    {
         string nhom = "";
-        for (int j = off; j < (int)text.size(); j += doDaiKhoa) nhom += text[j];
+        for (int j = off; j < (int)text.size(); j += doDaiKhoa)
+            nhom += text[j];
 
         double diemTot = 999999;
         int shiftTot = 0;
-        for (int shift = 0; shift < 26; shift++) {
+        for (int shift = 0; shift < 26; shift++)
+        {
             double diem = tinhChiSquare(nhom, shift);
-            if (diem < diemTot) {
+            if (diem < diemTot)
+            {
                 diemTot = diem;
                 shiftTot = shift;
             }
@@ -205,10 +248,12 @@ string doanKhoa(string text, int doDaiKhoa) {
     return khoa;
 }
 
-void phaMa(string cipherGoc) {
+void phaMa(string cipherGoc)
+{
     string cipher = cleanText(cipherGoc);
 
-    if ((int)cipher.size() < 20) {
+    if ((int)cipher.size() < 20)
+    {
         cout << "Luu y: ban tin hoi ngan, ket qua co the khong chinh xac lam\n\n";
     }
 
@@ -222,7 +267,8 @@ void phaMa(string cipherGoc) {
     cout << "Ban ro: " << banRo << "\n";
 }
 
-int main() {
+int main()
+{
     cout << "=== VIGENERE CIPHER ===\n";
     cout << "Chon che do:\n";
     cout << "  1. Ma hoa\n";
@@ -234,7 +280,8 @@ int main() {
     cin >> luaChon;
     cin.ignore(); // xoa ki tu xuong dong con sot lai sau khi cin >> so
 
-    if (luaChon == 1) {
+    if (luaChon == 1)
+    {
         string key, plain;
         cout << "Nhap khoa: ";
         getline(cin, key);
@@ -243,7 +290,8 @@ int main() {
 
         cout << "\nKet qua ma hoa: " << encrypt(plain, key) << "\n";
     }
-    else if (luaChon == 2) {
+    else if (luaChon == 2)
+    {
         string key, cipher;
         cout << "Nhap khoa: ";
         getline(cin, key);
@@ -252,7 +300,8 @@ int main() {
 
         cout << "\nKet qua giai ma: " << decrypt(cipher, key) << "\n";
     }
-    else if (luaChon == 3) {
+    else if (luaChon == 3)
+    {
         string cipher;
         cout << "Nhap ban ma (chua biet khoa la gi): ";
         getline(cin, cipher);
@@ -260,7 +309,8 @@ int main() {
 
         phaMa(cipher);
     }
-    else {
+    else
+    {
         cout << "Lua chon khong hop le, chi duoc nhap 1, 2 hoac 3\n";
         return 1;
     }
