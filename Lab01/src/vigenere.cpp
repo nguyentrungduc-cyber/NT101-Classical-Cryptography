@@ -1,278 +1,317 @@
-/**
- * Task 2.5 / 2.6 — Vigenère Cipher & Phá mã tự động
- * ============================================
- * 2.5: Mã hóa/giải mã Vigenère
- *      Ci = (pi + ki mod m) mod 26
- *      pi = (Ci - ki mod m + 26) mod 26
- *
- * 2.6: Phá mã khi không biết khóa:
- *      Bước 1 - Ước lượng độ dài khóa bằng Kasiski Examination (tìm các chuỗi
- *               con lặp lại trong ciphertext, khoảng cách giữa chúng là bội số
- *               của độ dài khóa) kết hợp Index of Coincidence để xác nhận.
- *      Bước 2 - Với mỗi độ dài khóa ứng viên, tách ciphertext thành các nhóm
- *               ký tự theo từng vị trí khóa, rồi dùng phân tích tần suất
- *               (chi-squared, giống Caesar) để suy ra từng ký tự của khóa.
- *
- * Compile: g++ -std=c++17 -O2 -o vigenere vigenere.cpp
- * Run:
- *   ./vigenere encrypt <key> "<plaintext>"
- *   ./vigenere decrypt <key> "<ciphertext>"
- *   ./vigenere crack <ciphertext_hoac_file>
- */
+// Task 2.5 va 2.6 - Vigenere Cipher
+// Ma hoa/giai ma theo cong thuc:
+//   C = (P + K) mod 26
+//   P = (C - K + 26) mod 26
+// K la ky tu khoa tuong ung, lap lai theo chieu dai ban ro
 
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <string>
 #include <vector>
 #include <map>
-#include <cctype>
 #include <cmath>
 #include <algorithm>
 
-static const double ENGLISH_FREQ[26] = {
+using namespace std;
+
+// bang tan suat chu cai tieng Anh (%), lay tu slide mon hoc
+double englishFreq[26] = {
     8.2, 1.5, 2.8, 4.3, 12.7, 2.2, 2.0, 6.1, 7.0, 0.15, 0.77, 4.0, 2.4,
-    6.7, 7.5, 1.9, 0.095, 6.0, 6.3, 9.1, 2.8, 0.98, 2.4, 0.15, 2.0, 0.074
-};
+    6.7, 7.5, 1.9, 0.095, 6.0, 6.3, 9.1, 2.8, 0.98, 2.4, 0.15, 2.0, 0.074};
 
-std::string readInput(const std::string& arg) {
-    std::ifstream file(arg);
-    if (file.good()) {
-        std::stringstream ss;
-        ss << file.rdbuf();
-        return ss.str();
+// chi lay chu cai, doi het thanh in hoa, may cai khac (dau cau, so...) bo qua
+string cleanText(string s)
+{
+    string out = "";
+    for (int i = 0; i < (int)s.size(); i++)
+    {
+        if (isalpha(s[i]))
+        {
+            out += toupper(s[i]);
+        }
     }
-    return arg;
+    return out;
 }
 
-std::string normalize(const std::string& text) {
-    std::string result;
-    for (char c : text) {
-        if (std::isalpha(static_cast<unsigned char>(c))) {
-            result += static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+// ma hoa Vigenere - giu nguyen dau cau khoang trang cho de doc
+string encrypt(string plain, string key)
+{
+    string k = cleanText(key);
+    string result = "";
+    int j = 0; // dem vi tri trong khoa, chi tang khi gap chu cai
+
+    for (int i = 0; i < (int)plain.size(); i++)
+    {
+        char c = plain[i];
+        if (isupper(c))
+        {
+            int shift = k[j % k.size()] - 'A';
+            result += (char)('A' + (c - 'A' + shift) % 26);
+            j++;
+        }
+        else if (islower(c))
+        {
+            int shift = k[j % k.size()] - 'A';
+            result += (char)('a' + (c - 'a' + shift) % 26);
+            j++;
+        }
+        else
+        {
+            result += c; // dau cau, khoang trang thi giu nguyen
         }
     }
     return result;
 }
 
-// ============================================
-// TASK 2.5: Mã hóa / Giải mã
-// ============================================
-std::string vigenereEncrypt(const std::string& plaintext, const std::string& key) {
-    std::string cleanKey = normalize(key);
-    std::string result;
-    int ki = 0;
+string decrypt(string cipher, string key)
+{
+    string k = cleanText(key);
+    string result = "";
+    int j = 0;
 
-    for (char c : plaintext) {
-        if (std::isupper(static_cast<unsigned char>(c))) {
-            int shift = cleanKey[ki % cleanKey.size()] - 'A';
-            result += static_cast<char>('A' + (c - 'A' + shift) % 26);
-            ki++;
-        } else if (std::islower(static_cast<unsigned char>(c))) {
-            int shift = cleanKey[ki % cleanKey.size()] - 'A';
-            result += static_cast<char>('a' + (c - 'a' + shift) % 26);
-            ki++;
-        } else {
-            result += c; // giữ nguyên ký tự không phải chữ cái, KHÔNG tăng ki
+    for (int i = 0; i < (int)cipher.size(); i++)
+    {
+        char c = cipher[i];
+        if (isupper(c))
+        {
+            int shift = k[j % k.size()] - 'A';
+            result += (char)('A' + ((c - 'A' - shift) % 26 + 26) % 26);
+            j++;
         }
-    }
-    return result;
-}
-
-std::string vigenereDecrypt(const std::string& ciphertext, const std::string& key) {
-    std::string cleanKey = normalize(key);
-    std::string result;
-    int ki = 0;
-
-    for (char c : ciphertext) {
-        if (std::isupper(static_cast<unsigned char>(c))) {
-            int shift = cleanKey[ki % cleanKey.size()] - 'A';
-            result += static_cast<char>('A' + ((c - 'A' - shift) % 26 + 26) % 26);
-            ki++;
-        } else if (std::islower(static_cast<unsigned char>(c))) {
-            int shift = cleanKey[ki % cleanKey.size()] - 'A';
-            result += static_cast<char>('a' + ((c - 'a' - shift) % 26 + 26) % 26);
-            ki++;
-        } else {
+        else if (islower(c))
+        {
+            int shift = k[j % k.size()] - 'A';
+            result += (char)('a' + ((c - 'a' - shift) % 26 + 26) % 26);
+            j++;
+        }
+        else
+        {
             result += c;
         }
     }
     return result;
 }
 
-// ============================================
-// TASK 2.6: Phá mã tự động
-// ============================================
+// ================= PHAN PHA MA (Task 2.6) =================
 
-// ---- Index of Coincidence: đo độ "lệch" phân bố chữ cái so với ngẫu nhiên.
-// IC của tiếng Anh thật ~0.067, của văn bản ngẫu nhiên ~0.038.
-// Dùng để chọn độ dài khóa: tách text theo độ dài khóa ứng viên, nếu IC trung
-// bình các nhóm gần 0.067 thì khóa đó có khả năng đúng (mỗi nhóm gần giống
-// Caesar cipher đơn, tức đơn bảng, IC cao).
-double indexOfCoincidence(const std::string& text) {
-    int counts[26] = {0};
-    for (char c : text) counts[c - 'A']++;
+// Index of Coincidence - do xac suat 2 chu cai random trong text giong nhau
+// Tieng Anh that thi IC ~ 0.067, con random thi thap hon nhieu ~0.038
+double tinhIC(string text)
+{
+    int dem[26] = {0};
+    for (int i = 0; i < (int)text.size(); i++)
+        dem[text[i] - 'A']++;
 
     int n = text.size();
-    if (n <= 1) return 0.0;
+    if (n <= 1)
+        return 0;
 
-    double sum = 0.0;
-    for (int i = 0; i < 26; i++) {
-        sum += counts[i] * (counts[i] - 1);
+    double tong = 0;
+    for (int i = 0; i < 26; i++)
+    {
+        tong += dem[i] * (dem[i] - 1);
     }
-    return sum / (n * (n - 1));
+    return tong / (n * (n - 1));
 }
 
-// Kasiski Examination: tìm các chuỗi con độ dài >=3 lặp lại, ghi nhận khoảng
-// cách giữa các lần xuất hiện — độ dài khóa thực sự thường là ước số chung
-// của phần lớn các khoảng cách này.
-std::vector<int> kasiskiDistances(const std::string& text, int seqLen = 3) {
-    std::map<std::string, std::vector<int>> positions;
-    for (size_t i = 0; i + seqLen <= text.size(); i++) {
-        positions[text.substr(i, seqLen)].push_back(i);
+// Kasiski: tim cac cum 3 ky tu bi lap lai, ghi lai khoang cach giua cac lan xuat hien
+// -> do dai khoa thuong la uoc chung cua may cai khoang cach nay
+vector<int> timKhoangCachLapLai(string text)
+{
+    map<string, vector<int>> viTri;
+    for (int i = 0; i + 3 <= (int)text.size(); i++)
+    {
+        string cum = text.substr(i, 3);
+        viTri[cum].push_back(i);
     }
 
-    std::vector<int> distances;
-    for (auto& [seq, pos] : positions) {
-        if (pos.size() < 2) continue;
-        for (size_t i = 1; i < pos.size(); i++) {
-            distances.push_back(pos[i] - pos[0]);
+    vector<int> khoangCach;
+    for (auto &p : viTri)
+    {
+        vector<int> &vt = p.second;
+        if (vt.size() < 2)
+            continue;
+        for (int i = 1; i < (int)vt.size(); i++)
+        {
+            khoangCach.push_back(vt[i] - vt[0]);
         }
     }
-    return distances;
+    return khoangCach;
 }
 
-int gcd(int a, int b) { return b == 0 ? a : gcd(b, a % b); }
+// thu doan do dai khoa tu 2 den 20, xem cai nao co phieu bau (Kasiski) va IC hop ly nhat
+int doanDoDaiKhoa(string text)
+{
+    vector<int> khoangCach = timKhoangCachLapLai(text);
 
-// Ước lượng độ dài khóa: kết hợp Kasiski (ước số chung của các khoảng cách)
-// với Index of Coincidence (xác nhận bằng cách thử trực tiếp)
-int estimateKeyLength(const std::string& text, int maxLen = 20) {
-    // Bước 1: Kasiski — đếm tần suất mỗi ước số xuất hiện trong các khoảng cách
-    auto distances = kasiskiDistances(text);
-    std::map<int, int> factorVotes;
-
-    for (int d : distances) {
-        for (int factor = 2; factor <= maxLen; factor++) {
-            if (d % factor == 0) factorVotes[factor]++;
-        }
-    }
-
-    std::cout << "=== Kasiski Examination: phieu bau cho tung do dai khoa ung vien ===\n";
-    std::vector<std::pair<int, int>> sortedVotes(factorVotes.begin(), factorVotes.end());
-    std::sort(sortedVotes.begin(), sortedVotes.end(), [](auto& a, auto& b) { return a.second > b.second; });
-    for (size_t i = 0; i < std::min<size_t>(5, sortedVotes.size()); i++) {
-        std::cout << "  Do dai " << sortedVotes[i].first << ": " << sortedVotes[i].second << " phieu\n";
-    }
-
-    // Bước 2: Xác nhận bằng Index of Coincidence cho vài ứng viên hàng đầu
-    std::cout << "\n=== Xac nhan bang Index of Coincidence (IC tieng Anh that ~0.067) ===\n";
-    int bestLen = 1;
-    double bestICDiff = 1e9;
-
-    int candidatesToCheck = std::min<size_t>(5, sortedVotes.size());
-    for (int i = 0; i < candidatesToCheck; i++) {
-        int len = sortedVotes[i].first;
-        double avgIC = 0.0;
-        for (int offset = 0; offset < len; offset++) {
-            std::string group;
-            for (size_t j = offset; j < text.size(); j += len) group += text[j];
-            avgIC += indexOfCoincidence(group);
-        }
-        avgIC /= len;
-        std::cout << "  Do dai " << len << ": IC trung binh = " << avgIC << "\n";
-
-        double diff = std::abs(avgIC - 0.067);
-        if (diff < bestICDiff) {
-            bestICDiff = diff;
-            bestLen = len;
+    // dem xem moi so tu 2->20 la uoc so cua bao nhieu khoang cach
+    map<int, int> phieuBau;
+    for (int d : khoangCach)
+    {
+        for (int f = 2; f <= 20; f++)
+        {
+            if (d % f == 0)
+                phieuBau[f]++;
         }
     }
 
-    return bestLen;
-}
+    cout << "Ket qua Kasiski (top 5 do dai duoc bau nhieu nhat):\n";
+    vector<pair<int, int>> ds(phieuBau.begin(), phieuBau.end());
+    sort(ds.begin(), ds.end(), [](pair<int, int> a, pair<int, int> b)
+         { return a.second > b.second; });
 
-// Chi-squared cho 1 nhóm ký tự với 1 shift cụ thể — dùng để tìm từng ký tự khóa
-double chiSquaredForShift(const std::string& group, int shift) {
-    int counts[26] = {0};
-    for (char c : group) {
-        int shifted = ((c - 'A') - shift + 26) % 26;
-        counts[shifted]++;
+    int soLuongXet = min((int)ds.size(), 5);
+    for (int i = 0; i < soLuongXet; i++)
+    {
+        cout << "  Do dai " << ds[i].first << " -> " << ds[i].second << " phieu\n";
     }
 
-    int total = group.size();
-    if (total == 0) return 1e9;
+    // xac nhan lai bang IC, do dai nao cho IC gan 0.067 nhat thi chon
+    cout << "\nKiem tra IC cho cac ung vien:\n";
+    int doDaiTot = 1;
+    double lechNhoNhat = 999;
 
-    double chiSquared = 0.0;
-    for (int i = 0; i < 26; i++) {
-        double observed = counts[i];
-        double expected = ENGLISH_FREQ[i] / 100.0 * total;
-        if (expected > 0) chiSquared += (observed - expected) * (observed - expected) / expected;
+    for (int i = 0; i < soLuongXet; i++)
+    {
+        int len = ds[i].first;
+        double tongIC = 0;
+        for (int off = 0; off < len; off++)
+        {
+            string nhom = "";
+            for (int j = off; j < (int)text.size(); j += len)
+                nhom += text[j];
+            tongIC += tinhIC(nhom);
+        }
+        double icTB = tongIC / len;
+        cout << "  Do dai " << len << " -> IC trung binh = " << icTB << "\n";
+
+        double lech = abs(icTB - 0.067);
+        if (lech < lechNhoNhat)
+        {
+            lechNhoNhat = lech;
+            doDaiTot = len;
+        }
     }
-    return chiSquared;
+
+    return doDaiTot;
 }
 
-std::string findKey(const std::string& text, int keyLen) {
-    std::string key;
-    for (int offset = 0; offset < keyLen; offset++) {
-        std::string group;
-        for (size_t j = offset; j < text.size(); j += keyLen) group += text[j];
+// voi 1 nhom ky tu (da biet cung 1 vi tri khoa) va shift dang thu, tinh chi-squared
+// giong het bai Caesar, cang thap thi cang giong tieng Anh
+double tinhChiSquare(string nhom, int shift)
+{
+    int dem[26] = {0};
+    for (char c : nhom)
+    {
+        int idx = ((c - 'A') - shift + 26) % 26;
+        dem[idx]++;
+    }
 
-        double bestScore = 1e18;
-        int bestShift = 0;
-        for (int shift = 0; shift < 26; shift++) {
-            double score = chiSquaredForShift(group, shift);
-            if (score < bestScore) {
-                bestScore = score;
-                bestShift = shift;
+    int n = nhom.size();
+    if (n == 0)
+        return 999999;
+
+    double chiSq = 0;
+    for (int i = 0; i < 26; i++)
+    {
+        double expect = englishFreq[i] / 100.0 * n;
+        if (expect > 0)
+        {
+            chiSq += (dem[i] - expect) * (dem[i] - expect) / expect;
+        }
+    }
+    return chiSq;
+}
+
+// voi do dai khoa da biet, tach text thanh tung nhom theo vi tri, roi doan tung ky tu khoa
+string doanKhoa(string text, int doDaiKhoa)
+{
+    string khoa = "";
+    for (int off = 0; off < doDaiKhoa; off++)
+    {
+        string nhom = "";
+        for (int j = off; j < (int)text.size(); j += doDaiKhoa)
+            nhom += text[j];
+
+        double diemTot = 999999;
+        int shiftTot = 0;
+        for (int shift = 0; shift < 26; shift++)
+        {
+            double diem = tinhChiSquare(nhom, shift);
+            if (diem < diemTot)
+            {
+                diemTot = diem;
+                shiftTot = shift;
             }
         }
-        key += static_cast<char>('A' + bestShift);
+        khoa += (char)('A' + shiftTot);
     }
-    return key;
+    return khoa;
 }
 
-void autoCrack(const std::string& raw) {
-    std::string ciphertext = normalize(raw);
-    if (ciphertext.size() < 20) {
-        std::cout << "Canh bao: ciphertext qua ngan, ket qua phan tich co the khong dang tin cay.\n";
+void phaMa(string cipherGoc)
+{
+    string cipher = cleanText(cipherGoc);
+
+    if ((int)cipher.size() < 20)
+    {
+        cout << "Luu y: ban tin hoi ngan, ket qua co the khong chinh xac lam\n\n";
     }
 
-    int keyLen = estimateKeyLength(ciphertext);
-    std::cout << "\n=== Do dai khoa duoc chon: " << keyLen << " ===\n\n";
+    int doDai = doanDoDaiKhoa(cipher);
+    cout << "\n>> Chon do dai khoa la: " << doDai << "\n\n";
 
-    std::string key = findKey(ciphertext, keyLen);
-    std::cout << "Khoa tim duoc: " << key << "\n\n";
+    string khoa = doanKhoa(cipher, doDai);
+    cout << "Khoa doan duoc: " << khoa << "\n\n";
 
-    std::string plaintext = vigenereDecrypt(ciphertext, key);
-    std::cout << "Ban ro: " << plaintext << "\n";
+    string banRo = decrypt(cipher, khoa);
+    cout << "Ban ro: " << banRo << "\n";
 }
 
-void printUsage() {
-    std::cout << "Su dung:\n"
-              << "  vigenere encrypt <key> <plaintext>\n"
-              << "  vigenere decrypt <key> <ciphertext>\n"
-              << "  vigenere crack <ciphertext_hoac_file>\n";
-}
+int main()
+{
+    cout << "=== VIGENERE CIPHER ===\n";
+    cout << "Chon che do:\n";
+    cout << "  1. Ma hoa\n";
+    cout << "  2. Giai ma\n";
+    cout << "  3. Pha ma (khong biet khoa)\n";
+    cout << "Nhap lua chon (1/2/3): ";
 
-int main(int argc, char* argv[]) {
-    if (argc < 3) {
-        printUsage();
-        return 1;
-    }
+    int luaChon;
+    cin >> luaChon;
+    cin.ignore(); // xoa ki tu xuong dong con sot lai sau khi cin >> so
 
-    std::string mode = argv[1];
+    if (luaChon == 1)
+    {
+        string key, plain;
+        cout << "Nhap khoa: ";
+        getline(cin, key);
+        cout << "Nhap ban ro can ma hoa: ";
+        getline(cin, plain);
 
-    if (mode == "encrypt" && argc >= 4) {
-        std::cout << "Ciphertext: " << vigenereEncrypt(argv[3], argv[2]) << "\n";
+        cout << "\nKet qua ma hoa: " << encrypt(plain, key) << "\n";
     }
-    else if (mode == "decrypt" && argc >= 4) {
-        std::cout << "Plaintext: " << vigenereDecrypt(argv[3], argv[2]) << "\n";
+    else if (luaChon == 2)
+    {
+        string key, cipher;
+        cout << "Nhap khoa: ";
+        getline(cin, key);
+        cout << "Nhap ban ma can giai: ";
+        getline(cin, cipher);
+
+        cout << "\nKet qua giai ma: " << decrypt(cipher, key) << "\n";
     }
-    else if (mode == "crack" && argc >= 3) {
-        autoCrack(readInput(argv[2]));
+    else if (luaChon == 3)
+    {
+        string cipher;
+        cout << "Nhap ban ma (chua biet khoa la gi): ";
+        getline(cin, cipher);
+        cout << "\n";
+
+        phaMa(cipher);
     }
-    else {
-        printUsage();
+    else
+    {
+        cout << "Lua chon khong hop le, chi duoc nhap 1, 2 hoac 3\n";
         return 1;
     }
 
