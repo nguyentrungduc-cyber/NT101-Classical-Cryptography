@@ -147,11 +147,26 @@ Kết quả: đoạn văn bản giới thiệu về series tiểu thuyết Harry
 
 ## Task 2.5 / 2.6 — Vigenère Cipher
 
+Chương trình chạy tương tác, không cần truyền tham số dòng lệnh — chỉ cần
+chạy `./vigenere` rồi làm theo hướng dẫn hiện lên màn hình:
+
 ```bash
-./vigenere encrypt <key> "<plaintext>"                      # Task 2.5
-./vigenere decrypt <key> "<ciphertext>"                      # Task 2.5
-./vigenere crack <ciphertext_hoặc_đường_dẫn_file>            # Task 2.6
+./vigenere
 ```
+```
+=== VIGENERE CIPHER ===
+Chon che do:
+  1. Ma hoa
+  2. Giai ma
+  3. Pha ma (khong biet khoa)
+Nhap lua chon (1/2/3): 1
+Nhap khoa: SECRET
+Nhap ban ro can ma hoa: Attack at dawn
+```
+
+- **Chọn 1** → Task 2.5 (mã hóa)
+- **Chọn 2** → Task 2.5 (giải mã, cần biết khóa)
+- **Chọn 3** → Task 2.6 (phá mã, không cần biết khóa, chỉ nhập ciphertext)
 
 **Task 2.6** phá mã khi không biết khóa, gồm 2 bước:
 
