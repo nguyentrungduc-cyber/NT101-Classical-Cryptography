@@ -1,10 +1,7 @@
 # Task 2.1 — Feistel Cipher & Sự lan truyền thay đổi (Avalanche Effect)
-# ============================================================
-# Triển khai Feistel cipher 4 vòng để quan sát cách thay đổi 1 bit
-# ở đầu vào lan truyền qua từng vòng mã hóa.
-#
-# Chạy: python task2_1_feistel.py
+# Triển khai Feistel cipher 4 vòng để quan sát cách thay đổi bit
 
+#Khai báo hàm
 def F(right, subkey):
     """Hàm nội bộ Feistel: kết hợp XOR và dịch bit."""
     return (right ^ subkey) & 0x0F
@@ -54,8 +51,8 @@ def hamming_distance(a, b):
 
 def main():
     key = 0x12
-    M1 = 0xAB
-    M2 = 0xAC  # Chỉ khác M1 đúng 1 bit (bit cuối)
+    M1 = 171
+    M2 = 0xAC
 
     print("=" * 55)
     print("Task 2.1 — Feistel Cipher (4 vòng, 8-bit)")
