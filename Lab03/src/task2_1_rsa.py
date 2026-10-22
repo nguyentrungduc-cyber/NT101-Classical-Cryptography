@@ -29,6 +29,34 @@ def tim_khoa(p, q, e):
     d = d % phi
     return (e, n), (d, n)
 
+#p1 = 11, q1 = 17, e1 = 7
 print("p1 = 11, q1 = 17, e1 = 7 ")
 pu, pr = tim_khoa(11, 17, 7)
-print("Public Key: ",pu,"Private Key:", pr)
+print("Public Key:",pu,"Private Key:", pr)
+
+"""
+p2 = 20079993872842322116151219,
+q2 = 676717145751736242170789,
+e2 = 17 (hệ thập phân)
+"""
+print("p2 = 20079993872842322116151219, q2 = 676717145751736242170789, e2 = 17 ")
+pu, pr = tim_khoa(20079993872842322116151219, 676717145751736242170789, 17)
+print("Public Key:",pu,"Private Key:", pr)
+
+"""
+p2 = 20079993872842322116151219,
+q2 = 676717145751736242170789,
+e2 = 17 (hệ thập phân)
+"""
+
+"""
+p3 = F7E75FDC469067FFDC4E847C51F452DF,
+q3 = E85CED54AF57E53E092113E62F436F4F,
+e3 = 0D88C3 (hệ thập lục phân)
+"""
+print("p3 = F7E75FDC469067FFDC4E847C51F452DF, q3 = E85CED54AF57E53E092113E62F436F4F, e3 = 0D88C3 ")
+p3 = int("F7E75FDC469067FFDC4E847C51F452DF", 16)
+q3 = int("E85CED54AF57E53E092113E62F436F4F", 16)
+e3 = int("0D88C3", 16)
+pu, pr = tim_khoa(p3, q3, e3)
+print("Public Key:",pu,"Private Key:", pr)
