@@ -32,7 +32,7 @@ def tim_khoa(p, q, e):
 #p1 = 11, q1 = 17, e1 = 7
 print("p1 = 11, q1 = 17, e1 = 7 ")
 pu, pr = tim_khoa(11, 17, 7)
-print("Public Key:",pu,"Private Key:", pr)
+print("Public Key:",pu,"\nPrivate Key:", pr)
 
 """
 p2 = 20079993872842322116151219,
@@ -41,7 +41,7 @@ e2 = 17 (hệ thập phân)
 """
 print("\np2 = 20079993872842322116151219, \nq2 = 676717145751736242170789, \ne2 = 17 ")
 pu, pr = tim_khoa(20079993872842322116151219, 676717145751736242170789, 17)
-print("Public Key:",pu,"Private Key:", pr)
+print("Public Key:",pu,"\nPrivate Key:", pr)
 
 """
 p2 = 20079993872842322116151219,
