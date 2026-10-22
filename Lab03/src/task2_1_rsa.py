@@ -60,3 +60,29 @@ q3 = int("E85CED54AF57E53E092113E62F436F4F", 16)
 e3 = int("0D88C3", 16)
 pu, pr = tim_khoa(p3, q3, e3)
 print("Public Key:",pu,"\nPrivate Key:", pr)
+
+
+
+"""
+-------------------------------------------------------------------------------
+2. Sử dụng khóa được tạo ra từ p1, q1, e1 để mã hóa và giải mã bản rõ M=5 trong
+cả hai trường hợp Mã hóa cho tính bảo mật (Encryption for Confidentiality)
+và Mã hóa cho tính xác thực (Encryption for Authentication).
+-------------------------------------------------------------------------------
+"""
+
+def ma_hoa(M, k, n):
+    return pow(M, k, n)
+
+e, d, n = 7, 23, 187
+M = 5
+
+# Bảo mật: Mã hóa bằng e, giải mã bằng d
+C = ma_hoa(M, e, n)
+M_lai = ma_hoa(C, d, n)
+print("\nBao mat  : C =", C, "| giai ma =", M_lai)
+
+# Xac thuc: ma hoa bang d, giai ma bang e
+S = ma_hoa(M, d, n)
+M_lai = ma_hoa(S, e, n)
+print("\nXac thuc : C =", S, "| giai ma =", M_lai)
