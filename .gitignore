@@ -29,3 +29,8 @@ Lab01/railfence
 # OS
 .DS_Store
 Thumbs.db
+
+# Lab03 – generated/debug output files (*.bin, prefix, certs, v.v.)
+*.bin
+Lab03/data/**
+!Lab03/data/**/.gitkeep
