@@ -32,9 +32,3 @@ print("MD5 m2:", hashlib.md5(m2).hexdigest())
 print("MD5 giong nhau:", hashlib.md5(m1).digest() == hashlib.md5(m2).digest())
 print("SHA-256 m1:", hashlib.sha256(m1).hexdigest())
 print("SHA-256 m2:", hashlib.sha256(m2).hexdigest())
-
-    # --- Bài 2: MD5 của hello và erase (file thực thi) ---
-    # TODO: tính MD5 của file hello và erase, in kết quả
-
-    # --- Bài 3: SHA-1 của shattered-1.pdf và shattered-2.pdf ---
-    # TODO: tính SHA-1 của hai file PDF, in kết quả
