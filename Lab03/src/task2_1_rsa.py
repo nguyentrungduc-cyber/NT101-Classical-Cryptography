@@ -1,88 +1,168 @@
 """
-Nhiệm vụ 2.1 – Mã hóa khóa công khai RSA
-NT101 – An toàn Mạng máy tính
+n = p·q
+φ = (p−1)(q−1)
+Có sẵn e (nguyên tố cùng nhau với φ)
+d = e⁻¹ mod φ. Trong Python dùng pow(e, -1, phi)
+PU = (e, n), PR = (d, n)
 """
 
-import math
+"""Yêu cầu 1: Xác định khóa công khai PU và khóa riêng PR"""
+
+def egcd(e, phi): # Lặp 2 thực chất đệ quy thì e là phi trước đó, phi là du trước đó
+    # Tra ve (g, d, k) sao cho: e*d + phi*k = g
+    if phi == 0:
+        return e, 1, 0
+    thuong = e // phi # Lần lặp 2 thực chất là phi // du trước
+    du = e % phi
+    g, d1, k1 = egcd(phi, du)
+    d = k1
+    k = d1 - thuong * k1
+    return g, d, k
+
+
+def tim_khoa(p, q, e):
+    n = p * q
+    phi = (p - 1) * (q - 1)
+    g, d, k = egcd(e, phi)
+    if g != 1:
+        raise ValueError("e khong nguyen to cung nhau voi phi")
+    d = d % phi
+    return (e, n), (d, n)
+
+#p1 = 11, q1 = 17, e1 = 7
+print("p1 = 11, q1 = 17, e1 = 7 ")
+pu, pr = tim_khoa(11, 17, 7)
+print("Public Key:",pu,"\nPrivate Key:", pr)
+
+"""
+p2 = 20079993872842322116151219,
+q2 = 676717145751736242170789,
+e2 = 17 (hệ thập phân)
+"""
+print("\np2 = 20079993872842322116151219, \nq2 = 676717145751736242170789, \ne2 = 17 ")
+pu, pr = tim_khoa(20079993872842322116151219, 676717145751736242170789, 17)
+print("Public Key:",pu,"\nPrivate Key:", pr)
+
+"""
+p2 = 20079993872842322116151219,
+q2 = 676717145751736242170789,
+e2 = 17 (hệ thập phân)
+"""
+
+"""
+p3 = F7E75FDC469067FFDC4E847C51F452DF,
+q3 = E85CED54AF57E53E092113E62F436F4F,
+e3 = 0D88C3 (hệ thập lục phân)
+"""
+print("\np3 = F7E75FDC469067FFDC4E847C51F452DF, \nq3 = E85CED54AF57E53E092113E62F436F4F, \ne3 = 0D88C3 ")
+p3 = int("F7E75FDC469067FFDC4E847C51F452DF", 16)
+q3 = int("E85CED54AF57E53E092113E62F436F4F", 16)
+e3 = int("0D88C3", 16)
+pu, pr = tim_khoa(p3, q3, e3)
+print("Public Key:",pu,"\nPrivate Key:", pr)
+
+
+
+"""
+-------------------------------------------------------------------------------
+2. Sử dụng khóa được tạo ra từ p1, q1, e1 để mã hóa và giải mã bản rõ M=5 trong
+cả hai trường hợp Mã hóa cho tính bảo mật (Encryption for Confidentiality)
+và Mã hóa cho tính xác thực (Encryption for Authentication).
+-------------------------------------------------------------------------------
+"""
+
+def ma_hoa(M, k, n):
+    return pow(M, k, n)
+
+e, d, n = 7, 23, 187
+M = 5
+
+# Bảo mật: Mã hóa bằng e, giải mã bằng d
+C = ma_hoa(M, e, n)
+M_lai = ma_hoa(C, d, n)
+print("\nBao mat  : C =", C, "| giai ma =", M_lai)
+
+# Xac thuc: ma hoa bang d, giai ma bang e
+S = ma_hoa(M, d, n)
+M_lai = ma_hoa(S, e, n)
+print("\nXac thuc : C =", S, "| giai ma =", M_lai)
+
+""" Yêu cầu 3:
+-------------------
+Sử dụng các khóa trên để mã hóa thông điệp sau: The University of Information
+Technology. Xác định bản mã dưới dạng Base64.
+------------------------
+"""
 import base64
 
-
-def compute_keys(p: int, q: int, e: int) -> tuple:
-    """Tính khóa công khai (e, n) và khóa riêng tư (d, n) từ p, q, e."""
-    # TODO: tính n, phi(n), d
-    pass
-
-
-def encrypt_confidentiality(M: int, e: int, n: int) -> int:
-    """Mã hóa bảo mật: C = M^e mod n"""
-    # TODO
-    pass
-
-
-def decrypt_confidentiality(C: int, d: int, n: int) -> int:
-    """Giải mã bảo mật: M = C^d mod n"""
-    # TODO
-    pass
+def ma_hoa_chuoi(text, k, n):
+    du_lieu = text.encode()                        # chuoi -> mang byte
+    byte_moi_khoi = max(1, (n.bit_length() - 1) // 8)
+    byte_ban_ma = (n.bit_length() + 7) // 8
+    ket_qua = b""
+    for i in range(0, len(du_lieu), byte_moi_khoi):
+        khoi = du_lieu[i:i + byte_moi_khoi]
+        M = int.from_bytes(khoi, "big")            # khoi byte -> so
+        C = pow(M, k, n)
+        ket_qua += C.to_bytes(byte_ban_ma, "big")  # do dai co dinh
+    return base64.b64encode(ket_qua).decode()
 
 
-def encrypt_authentication(M: int, d: int, n: int) -> int:
-    """Mã hóa xác thực: C = M^d mod n"""
-    # TODO
-    pass
+def giai_ma_chuoi(b64, k, n):
+    byte_ban_ma = (n.bit_length() + 7) // 8
+    raw = base64.b64decode(b64)
+    ket_qua = b""
+    for i in range(0, len(raw), byte_ban_ma):
+        C = int.from_bytes(raw[i:i + byte_ban_ma], "big")
+        M = pow(C, k, n)
+        ket_qua += M.to_bytes((M.bit_length() + 7) // 8, "big")
+    return ket_qua.decode()
+
+bo_khoa = {
+    "Bo 1": (11, 17, 7),
+    "Bo 2": (20079993872842322116151219, 676717145751736242170789, 17),
+    "Bo 3": (int("F7E75FDC469067FFDC4E847C51F452DF", 16),
+             int("E85CED54AF57E53E092113E62F436F4F", 16),
+             int("0D88C3", 16)),
+}
+
+thong_diep = "The University of Information Technology"
+
+for ten, (p, q, e) in bo_khoa.items():
+    (e, n), (d, _) = tim_khoa(p, q, e)
+    bm = ma_hoa_chuoi(thong_diep, e, n)
+    xt = ma_hoa_chuoi(thong_diep, d, n)
+    print(ten)
+    print("  Bao mat :", bm)
+    print("    giai ma:", giai_ma_chuoi(bm, d, n))
+    print("  Xac thuc:", xt)
+    print("    giai ma:", giai_ma_chuoi(xt, e, n))
+    print()
 
 
-def decrypt_authentication(C: int, e: int, n: int) -> int:
-    """Giải mã xác thực: M = C^e mod n"""
-    # TODO
-    pass
+"""
+--------------------
+Yêu cầu 4:
+Tìm bản rõ tương ứng của mỗi bản mã sau, biết rằng chúng được mã hóa bằng
+một trong ba khóa đã cho ở trên
+----------------------"""
 
 
-def encrypt_message_string(message: str, e: int, n: int) -> str:
-    """Mã hóa chuỗi văn bản, trả về Base64."""
-    # TODO: chuyển từng ký tự → số 2 chữ số → ghép block 4 chữ số → mã hóa RSA
-    pass
+def giai_ma_tung_byte(b64, k, n):
+    raw = base64.b64decode(b64)                 # Base64 -> mang byte
+    ket_qua = []
+    for c in raw:
+        if c >= n:                              # byte lon hon n thi khong phai khoa nay
+            return None
+        ket_qua.append(pow(c, k, n))
+    return bytes(ket_qua)
 
 
-def decrypt_ciphertext_b64(b64_cipher: str, d: int, n: int) -> str:
-    """Giải mã chuỗi Base64, trả về plaintext."""
-    # TODO
-    pass
+e, d, n = 7, 23, 187                            # bo khoa 1 (cau 1)
+ban_ma = "Z2BUSkJcg0w4XEpgm0JcMExEQmBlVH6dYEpNTHpMHptMQ7NgTHlgQrNMQ2BKTQ=="
 
-
-if __name__ == "__main__":
-    # --- Bộ khóa 1: p1=11, q1=17, e1=7 (thập phân) ---
-    p1, q1, e1 = 11, 17, 7
-    PU1, PR1 = compute_keys(p1, q1, e1)
-    print(f"[Key1] PU = {PU1}  |  PR = {PR1}")
-
-    # Bài 2: mã hóa/giải mã M=5
-    M = 5
-    # TODO: in kết quả cả hai hướng Confidentiality và Authentication
-
-    # --- Bộ khóa 2 & 3 ---
-    p2 = 20079993872842322116151219
-    q2 = 676717145751736242170789
-    e2 = 17
-    PU2, PR2 = compute_keys(p2, q2, e2)
-    print(f"[Key2] PU = {PU2}  |  PR = {PR2}")
-
-    p3 = int("F7E75FDC469067FFDC4E847C51F452DF", 16)
-    q3 = int("E85CED54AF57E53E092113E62F436F4F", 16)
-    e3 = int("0D88C3", 16)
-    PU3, PR3 = compute_keys(p3, q3, e3)
-    print(f"[Key3] PU = {PU3}  |  PR = {PR3}")
-
-    # Bài 3: mã hóa chuỗi
-    msg = "The University of Information Technology"
-    # TODO: thử cả 3 bộ khóa, in Base64
-
-    # Bài 4: giải mã các bản mã cho sẵn
-    ciphertexts = [
-        "raUcesUlOkx/8ZhgodMoo0Uu18sC20yXlQFevSu7W/FDxIy0YRHMyXcHdD9PBvIT2aUft5fCQEGomiVVPv4I",
-        "C87F570FC4F699CEC24020C6F54221ABAB2CE0C3",
-        "Z2BUSkJcg0w4XEpgm0JcMExEQmBlVH6dYEpNTHpMHptMQ7NgTHlgQrNMQ2BKTQ==",
-        "001010000001010011111111101101110010111011001010111011000110011"
-        "110111111001111110110100011001111001100001001010001010100111101"
-        "010100110011101110111011110101101100000100",
-    ]
-    # TODO: thử từng bộ khóa, in plaintext tương ứng
+print("Thu giai bang d (khoa rieng):")
+print(giai_ma_tung_byte(ban_ma, d, n).decode(errors="replace"))
+print()
+print("Thu giai bang e (khoa cong khai):")
+print(giai_ma_tung_byte(ban_ma, e, n).decode(errors="replace"))
