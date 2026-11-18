@@ -55,7 +55,7 @@ python task2_6_mersenne.py
 
 ## Kết quả nổi bật khi chạy
 
-**Task 2.1:** M1=0xAB vs M2=0xAC (khác 1 bit) → C1 vs C2 khác **6/8 bit (75%)** sau 4 vòng Feistel.
+**Task 2.1:** M1=0xAB vs M2=0xAC (khác 3 bit: bit 0, 1, 2 → 3/8 = 37.5%) → C1 vs C2 khác **6/8 bit (75%)** sau 4 vòng Feistel.
 
 **Task 2.2:** Bản rõ `UIT_LAB_UIT_LAB_...` (lặp lại):
 - ECB: Khối 1 == Khối 2 (⚠️ lộ cấu trúc)

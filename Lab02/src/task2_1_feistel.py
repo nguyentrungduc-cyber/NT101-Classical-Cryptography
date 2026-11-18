@@ -1,6 +1,12 @@
 # Task 2.1 — Feistel Cipher & Sự lan truyền thay đổi (Avalanche Effect)
 # Triển khai Feistel cipher 4 vòng để quan sát cách thay đổi bit
 
+import sys
+
+# Đảm bảo in được tiếng Việt khi output bị pipe/redirect (Windows mặc định cp1252)
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 #Khai báo hàm
 def F(right, subkey):
     """Hàm nội bộ Feistel: kết hợp XOR và dịch bit."""
@@ -30,8 +36,8 @@ def track_avalanche(msg, key, label=""):
     subkeys = [
         key & 0x0F,
         (key >> 4) & 0x0F,
-        (key + 1) & 0xFF & 0x0F,
-        (key + 2) & 0xFF & 0x0F,
+        (key + 1) & 0x0F,
+        (key + 2) & 0x0F,
     ]
 
     print(f"  Khởi tạo: L={format(L, '04b')}  R={format(R, '04b')}  (msg=0x{msg:02X})")
@@ -49,6 +55,11 @@ def hamming_distance(a, b):
     return bin(a ^ b).count('1')
 
 
+def diff_positions(a, b, width=8):
+    """Liệt kê vị trí các bit khác nhau (đánh số từ 0 = LSB)."""
+    return [i for i in range(width) if ((a ^ b) >> i) & 1]
+
+
 def main():
     key = 0x12
     M1 = 171
@@ -58,7 +69,9 @@ def main():
     print("Task 2.1 — Feistel Cipher (4 vòng, 8-bit)")
     print("=" * 55)
     print(f"\nKey = 0x{key:02X} | M1 = 0x{M1:02X} | M2 = 0x{M2:02X}")
-    print(f"M1 vs M2 khác nhau: {hamming_distance(M1, M2)} bit (bit cuối)\n")
+    in_diff = hamming_distance(M1, M2)
+    in_positions = ", ".join(f"bit {i}" for i in diff_positions(M1, M2))
+    print(f"M1 vs M2 khác nhau: {in_diff} bit ({in_positions})\n")
 
     print("--- Mã hóa M1 ---")
     c1 = track_avalanche(M1, key)
@@ -75,7 +88,7 @@ def main():
 
     # So sánh từng vòng để thấy sự lan truyền
     print(f"\n--- Nhận xét ---")
-    print(f"Đầu vào M1 và M2 khác nhau 1 bit ({hamming_distance(M1, M2)}/{total_bits} = {hamming_distance(M1, M2)/total_bits*100:.1f}%)")
+    print(f"Đầu vào M1 và M2 khác nhau {in_diff} bit ({in_diff}/{total_bits} = {in_diff/total_bits*100:.1f}%)")
     print(f"Đầu ra C1 và C2 khác nhau {diff} bit ({diff}/{total_bits} = {diff/total_bits*100:.1f}%)")
     if diff > total_bits // 2:
         print("→ Hiệu ứng thác đổ tốt: thay đổi nhỏ ở đầu vào gây ra")
